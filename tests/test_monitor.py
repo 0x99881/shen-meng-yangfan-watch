@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import unittest
 from datetime import datetime, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 import monitor
 
@@ -114,6 +117,48 @@ class EmailTests(unittest.TestCase):
         )
         self.assertIn("高新区社区", subject)
         self.assertIn("测试楼栋：2", body)
+
+    def test_env_file_is_loaded_without_overriding_existing_values(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / ".env"
+            path.write_text(
+                "HOUSING_SMTP_USER=sender@gmail.com\n"
+                "HOUSING_SMTP_APP_PASSWORD=abcd efgh\n"
+                "HOUSING_NOTIFY_TO=receiver@example.com\n",
+                encoding="utf-8",
+            )
+            with patch.dict(
+                "os.environ",
+                {"HOUSING_SMTP_USER": "already-set@gmail.com"},
+                clear=True,
+            ):
+                monitor.load_env_file(path)
+                self.assertEqual(
+                    monitor.os.environ["HOUSING_SMTP_USER"],
+                    "already-set@gmail.com",
+                )
+                self.assertEqual(
+                    monitor.os.environ["HOUSING_NOTIFY_TO"],
+                    "receiver@example.com",
+                )
+
+    def test_send_email_logs_in_and_sends_message(self) -> None:
+        settings = {
+            "enabled": True,
+            "smtp_host": "smtp.gmail.com",
+            "smtp_port": 465,
+            "sender": "sender@gmail.com",
+            "password": "app-password",
+            "recipient": "receiver@example.com",
+            "subject_prefix": "【测试】",
+        }
+        with patch("monitor.smtplib.SMTP_SSL") as smtp:
+            client = smtp.return_value.__enter__.return_value
+            monitor.send_email(settings, "测试主题", "测试内容")
+            client.login.assert_called_once_with(
+                "sender@gmail.com", "app-password"
+            )
+            client.send_message.assert_called_once()
 
 
 if __name__ == "__main__":

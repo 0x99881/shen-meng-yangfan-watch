@@ -6,5 +6,5 @@ if not exist config.json (
   pause
   exit /b 1
 )
-python monitor.py
+python app.py
 pause

@@ -58,7 +58,21 @@ Copy-Item config.example.json config.json
 
 Gmail 通常需要先开启两步验证，再创建应用专用密码。不要把 Gmail 密码或应用专用密码写进配置文件、代码或提交到 GitHub。
 
-在当前 PowerShell 窗口设置：
+复制邮件设置示例：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+打开 `.env`，填写以下三项：
+
+```text
+HOUSING_SMTP_USER=你的Gmail地址
+HOUSING_SMTP_APP_PASSWORD=你的Gmail应用专用密码
+HOUSING_NOTIFY_TO=接收提醒的邮箱地址
+```
+
+也可以只在当前 PowerShell 窗口临时设置：
 
 ```powershell
 $env:HOUSING_SMTP_USER="你的Gmail地址"
@@ -68,25 +82,42 @@ $env:HOUSING_NOTIFY_TO="接收提醒的邮箱地址"
 
 如果接收邮箱已经开启微信提醒，邮件到达后就能在微信中看到通知。
 
-### 3. 测试邮件
+### 3. 打开本地窗口
+
+Windows 用户可以双击 `start_windows.bat`，也可以运行：
+
+```powershell
+python app.py
+```
+
+窗口提供以下按钮：
+
+- `发送测试邮件`：检查邮件通道是否可用
+- `立即检查一次`：马上读取一次当前房源
+- `开始持续监控`：按设定时间自动检查
+- `停止监控`：停止自动检查
+
+测试按钮显示“发送成功”代表 Gmail 已接受邮件，请再检查收件箱或微信提醒确认是否到达。
+
+### 4. 命令行测试邮件
 
 ```powershell
 python monitor.py --test-email
 ```
 
-### 4. 测试房源读取
+### 5. 测试房源读取
 
 ```powershell
 python monitor.py --once --dry-run
 ```
 
-### 5. 开始监控
+### 6. 命令行开始监控
 
 ```powershell
 python monitor.py
 ```
 
-Windows 用户也可以双击 `start_windows.bat`。程序窗口需要保持运行，电脑进入睡眠或关机后监控会暂停。
+程序窗口需要保持运行，电脑进入睡眠或关机后监控会暂停。
 
 ## 常用设置
 

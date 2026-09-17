@@ -21,6 +21,7 @@ SHANGHAI_TZ = timezone(timedelta(hours=8))
 ROOT = Path(__file__).resolve().parent
 DEFAULT_CONFIG = ROOT / "config.json"
 DEFAULT_STATE = ROOT / "data" / "state.json"
+DEFAULT_ENV = ROOT / ".env"
 
 
 def now_shanghai() -> datetime:
@@ -223,14 +224,29 @@ def load_config(path: Path) -> dict[str, Any]:
     return config
 
 
+def load_env_file(path: Path = DEFAULT_ENV) -> None:
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            os.environ.setdefault(key, value)
+
+
 def email_settings(config: dict[str, Any]) -> dict[str, Any]:
+    load_env_file()
     email = config.get("email") or {}
     return {
         "enabled": bool(email.get("enabled", True)),
         "smtp_host": str(email.get("smtp_host") or "smtp.gmail.com"),
         "smtp_port": int(email.get("smtp_port") or 465),
         "sender": os.getenv("HOUSING_SMTP_USER") or str(email.get("sender") or ""),
-        "password": os.getenv("HOUSING_SMTP_APP_PASSWORD") or "",
+        "password": (os.getenv("HOUSING_SMTP_APP_PASSWORD") or "").replace(" ", ""),
         "recipient": os.getenv("HOUSING_NOTIFY_TO")
         or str(email.get("recipient") or ""),
         "subject_prefix": str(email.get("subject_prefix") or "【深梦扬帆】"),
@@ -385,6 +401,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
+        load_env_file()
         config = load_config(args.config)
         if args.test_email:
             send_test_message(config)
