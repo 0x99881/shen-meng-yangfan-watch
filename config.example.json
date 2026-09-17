@@ -1,0 +1,23 @@
+{
+  "watch_districts": [
+    "南山区"
+  ],
+  "check_minutes": [
+    1,
+    11,
+    21,
+    31,
+    41,
+    51
+  ],
+  "request_timeout_seconds": 20,
+  "notify_on_startup": false,
+  "email": {
+    "enabled": true,
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 465,
+    "sender": "",
+    "recipient": "",
+    "subject_prefix": "【深梦扬帆】"
+  }
+}
